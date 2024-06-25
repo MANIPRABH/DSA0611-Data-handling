@@ -1,0 +1,182 @@
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(reshape2)
+install.packages("viridis")
+library(viridis)
+install.packages("ggcorrplot")
+library(ggcorrplot)
+install.packages("ks")
+library(ks)
+
+# Load Data
+data <- read.table(text = "Customer_ID Age Gender Purchase_Amount Membership_Level
+1 35 Male 100 Gold
+2 28 Female 80 Silver
+3 42 Male 120 Bronze
+4 25 Female 90 Bronze
+5 38 Male 110 Silver
+6 45 Female 150 Gold
+7 23 Male 60 Silver
+8 34 Female 130 Gold
+9 40 Male 95 Bronze
+10 30 Female 85 Silver
+11 29 Male 70 Bronze
+12 50 Female 160 Gold
+13 32 Male 75 Silver
+14 47 Female 140 Bronze
+15 36 Male 115 Gold
+16 27 Female 65 Silver
+17 41 Male 125 Bronze
+18 33 Female 135 Gold
+19 39 Male 105 Silver
+20 26 Female 95 Bronze
+21 48 Male 145 Gold
+22 31 Female 90 Silver
+23 44 Male 120 Bronze
+24 37 Female 125 Gold
+25 43 Male 130 Silver
+26 24 Female 85 Bronze
+27 46 Male 155 Gold
+28 49 Female 140 Silver
+29 21 Male 50 Bronze
+30 22 Female 60 Silver", header = TRUE, sep = " ")
+
+# Data Cleaning
+# Check for missing values
+sum(is.na(data))
+
+# Data Processing
+# Convert categorical columns to factors
+data$Gender <- as.factor(data$Gender)
+data$Membership_Level <- as.factor(data$Membership_Level)
+
+# EDA Analysis
+summary(data)
+
+# Visualization
+# Age distribution
+ggplot(data, aes(x = Age)) + 
+  geom_histogram(binwidth = 5, fill = "skyblue", color = "black") + 
+  ggtitle("Age Distribution")
+
+# Purchase Amount distribution
+ggplot(data, aes(x = Purchase_Amount)) + 
+  geom_histogram(binwidth = 10, fill = "orange", color = "black") + 
+  ggtitle("Purchase Amount Distribution")
+
+# Purchase Amount by Age and Gender
+ggplot(data, aes(x = Age, y = Purchase_Amount, color = Gender)) + 
+  geom_point() + 
+  ggtitle("Purchase Amount by Age and Gender")
+
+# Purchase Amount by Membership Level
+ggplot(data, aes(x = Membership_Level, y = Purchase_Amount, fill = Membership_Level)) + 
+  geom_boxplot() + 
+  ggtitle("Purchase Amount by Membership Level")
+
+# Age by Gender
+ggplot(data, aes(x = Gender, y = Age, fill = Gender)) + 
+  geom_boxplot() + 
+  ggtitle("Age by Gender")
+
+# Purchase Amount by Age
+ggplot(data, aes(x = Age, y = Purchase_Amount)) + 
+  geom_point() + 
+  ggtitle("Purchase Amount by Age")
+
+# 3D Scatter Plot: Age, Purchase Amount, and Membership Level
+plot_ly(data, x = ~Age, y = ~Purchase_Amount, z = ~Membership_Level, color = ~Gender, type = 'scatter3d', mode = 'markers')
+
+# 3D Scatter Plot: Age, Purchase Amount, and Gender
+plot_ly(data, x = ~Age, y = ~Purchase_Amount, z = ~Gender, color = ~Membership_Level, type = 'scatter3d', mode = 'markers')
+
+# Purchase Amount by Age and Membership Level
+ggplot(data, aes(x = Age, y = Purchase_Amount, color = Membership_Level)) + 
+  geom_point() + 
+  ggtitle("Purchase Amount by Age and Membership Level")
+
+# 3D Scatter Plot with Plotly
+plot_ly(data, x = ~Age, y = ~Purchase_Amount, z = ~Membership_Level, color = ~Gender, type = 'scatter3d', mode = 'markers')
+
+# Purchase Amount vs. Age and Gender in 3D
+plot_ly(data, x = ~Age, y = ~Purchase_Amount, z = ~Gender, color = ~Membership_Level, type = 'scatter3d', mode = 'markers')
+
+# Gender-wise purchase amount distribution
+ggplot(data, aes(x = Gender, y = Purchase_Amount, fill = Gender)) + 
+  geom_boxplot() + 
+  ggtitle("Purchase Amount by Gender")
+
+# Pair plots for numerical features
+pairs(data %>% select(Age, Purchase_Amount), main = "Pair Plot")
+
+# Density plots for Age and Purchase Amount
+ggplot(data, aes(x = Age, fill = Gender)) + 
+  geom_density(alpha = 0.5) + 
+  ggtitle("Age Density by Gender")
+ggplot(data, aes(x = Purchase_Amount, fill = Gender)) + 
+  geom_density(alpha = 0.5) + 
+  ggtitle("Purchase Amount Density by Gender")
+
+# Membership Level vs. Purchase Amount
+ggplot(data, aes(x = Membership_Level, y = Purchase_Amount, fill = Membership_Level)) + 
+  geom_violin() + 
+  ggtitle("Membership Level vs. Purchase Amount")
+
+# 3D Density Plot
+H <- Hpi(x = data[, c("Age", "Purchase_Amount")])
+fhat <- kde(x = data[, c("Age", "Purchase_Amount")], H = H)
+plot(fhat, display = "persp", col = "lightblue")
+
+# Plotly 3D Surface
+plot_ly(z = ~fhat$estimate, type = "surface") %>% 
+  layout(scene = list(xaxis = list(title = "Age"), yaxis = list(title = "Purchase Amount"), zaxis = list(title = "Density")))
+
+# Heatmap for Age vs. Purchase Amount
+ggplot(data, aes(x = Age, y = Purchase_Amount, fill = ..density..)) + 
+  geom_tile(aes(fill = ..density..), color = "white") + 
+  scale_fill_viridis_c() + 
+  ggtitle("Heatmap of Age vs. Purchase Amount")
+
+# Correlation Matrix
+corr <- round(cor(data %>% select(Age, Purchase_Amount)), 2)
+ggcorrplot(corr, method = "circle", lab = TRUE, title = "Correlation Matrix")
+
+# Purchase Amount over Age with a smooth line
+ggplot(data, aes(x = Age, y = Purchase_Amount)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", col = "red") + 
+  ggtitle("Purchase Amount over Age with Trend Line")
+
+# Purchase Amount per Membership Level by Gender
+ggplot(data, aes(x = Membership_Level, y = Purchase_Amount, fill = Gender)) + 
+  geom_bar(stat = "identity", position = position_dodge()) + 
+  ggtitle("Purchase Amount per Membership Level by Gender")
+
+# Purchase Amount per Age Group
+data <- data %>% mutate(AgeGroup = cut(Age, breaks = seq(20, 50, by = 5), right = FALSE))
+ggplot(data, aes(x = AgeGroup, y = Purchase_Amount, fill = AgeGroup)) + 
+  geom_boxplot() + 
+  ggtitle("Purchase Amount per Age Group")
+
+# Purchase Amount by Membership Level and Gender in 3D
+plot_ly(data, x = ~Membership_Level, y = ~Purchase_Amount, z = ~Gender, color = ~Age, type = 'scatter3d', mode = 'markers')
+
+# Save the plots as images
+ggsave("age_distribution.png")
+ggsave("purchase_amount_distribution.png")
+ggsave("purchase_amount_by_age_gender.png")
+ggsave("purchase_amount_by_membership_level.png")
+ggsave("age_by_gender.png")
+ggsave("purchase_amount_by_age.png")
+ggsave("purchase_amount_by_age_membership_level.png")
+ggsave("purchase_amount_by_gender.png")
+ggsave("age_density_by_gender.png")
+ggsave("purchase_amount_density_by_gender.png")
+ggsave("membership_level_vs_purchase_amount.png")
+ggsave("heatmap_age_vs_purchase_amount.png")
+ggsave("correlation_matrix.png")
+ggsave("purchase_amount_over_age_trend_line.png")
+ggsave("purchase_amount_per_membership_level_gender.png")
+ggsave("purchase_amount_per_age_group.png")
